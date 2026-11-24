@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Editor / OS noise
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# 本地私有笔记（不纳入仓库）
+.local/

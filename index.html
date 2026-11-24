@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>DE²TR: Dual Evidence Detection Transformer for Video Temporal Grounding</title>
+  <meta name="title" content="DE²TR: Dual Evidence Detection Transformer for Video Temporal Grounding">
+  <meta name="description" content="DE²TR (ECCV 2026) decouples semantic and boundary evidence in DETR-style video temporal grounding: a dual-branch decoder with prior-guided refinement and boundary augmentation, achieving new state of the art on QVHighlights, Charades-STA, TACoS and TVSum.">
+  <meta name="keywords" content="video temporal grounding, moment retrieval, highlight detection, detection transformer, DETR, ECCV 2026">
+  <meta name="author" content="Yifan Zhang, Chengxu Liu, Yujie Dun, Xueming Qian">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Xi'an Jiaotong University">
+  <meta property="og:title" content="DE²TR: Dual Evidence Detection Transformer for Video Temporal Grounding">
+  <meta property="og:description" content="DE²TR (ECCV 2026): a dual-evidence detection transformer for precise video temporal grounding.">
+  <meta property="og:image" content="static/images/social_preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DE²TR: Dual Evidence Detection Transformer for Video Temporal Grounding">
+  <meta name="twitter:description" content="DE²TR (ECCV 2026): a dual-evidence detection transformer for precise video temporal grounding.">
+  <meta name="twitter:image" content="static/images/social_preview.png">
+
+  <meta name="citation_title" content="DE²TR: Dual Evidence Detection Transformer for Video Temporal Grounding">
+  <meta name="citation_author" content="Zhang, Yifan">
+  <meta name="citation_author" content="Liu, Chengxu">
+  <meta name="citation_author" content="Dun, Yujie">
+  <meta name="citation_author" content="Qian, Xueming">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="European Conference on Computer Vision (ECCV)">
+  <meta name="citation_pdf_url" content="static/pdf/main.pdf">
+
+  <meta name="theme-color" content="#0A7E8C">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231E293B'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='26' font-weight='bold' fill='white' text-anchor='middle'%3EDE%3C/text%3E%3Ctext x='47' y='30' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='%23E8517E' text-anchor='middle'%3E2%3C/text%3E%3Ctext x='32' y='52' font-family='Arial,sans-serif' font-size='14' font-weight='bold' fill='%230E9FAE' text-anchor='middle'%3ETR%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.3/dist/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-slider@2.0.4/dist/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/style.css?v=20260823e">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.3/dist/js/bulma-carousel.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bulma-slider@2.0.4/dist/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/cases.js?v=20260823e"></script>
+  <script defer src="static/js/demo.js?v=20260823e"></script>
+  <script defer src="static/js/main.js?v=20260823e"></script>
+</head>
+<body>
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <!-- ============================== HERO ============================== -->
+  <section class="hero publication-header">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <div class="publication-title" style="font-size:2.4rem;font-weight:800;line-height:1.25;margin-bottom:2rem">
+              <div>DE&#178;TR: Dual Evidence Detection Transformer</div>
+              <div>for Video Temporal Grounding</div>
+            </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://orcid.org/0009-0008-0545-4956" target="_blank">Yifan Zhang</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://orcid.org/0000-0001-8023-9465" target="_blank">Chengxu Liu</a><sup>2</sup>,</span>
+              <span class="author-block">
+                <a href="https://orcid.org/0000-0001-5213-1000" target="_blank">Yujie Dun</a><sup>1,&#9993;</sup>,</span>
+              <span class="author-block">
+                <a href="https://orcid.org/0000-0002-3173-6307" target="_blank">Xueming Qian</a><sup>1</sup></span>
+            </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>School of Information and Communication Engineering &nbsp;·&nbsp; <sup>2</sup>School of Software Engineering<br>Xi&rsquo;an Jiaotong University, Xi&rsquo;an, China</span>
+            </div>
+            <div class="publication-venue">
+              <i class="fas fa-trophy"></i>&nbsp; ECCV 2026 &nbsp;·&nbsp; September 8&ndash;12 &nbsp;·&nbsp; Malm&ouml;, Sweden
+            </div>
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="static/pdf/main.pdf" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="static/pdf/supplementary_material.pdf" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Supplementary</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#demo" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-play"></i></span>
+                    <span>Demo</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/ivanZ106/DE2TR" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-quote-right"></i></span>
+                    <span>BibTeX</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== DEMO (right below the header) ============================== -->
+  <section class="section" id="demo">
+    <div class="container is-max-desktop">
+      <div class="case-video-row">
+        <p class="case-query" id="caseQuery"></p>
+        <video id="caseVideo" controls playsinline preload="metadata" class="case-video"></video>
+      </div>
+
+      <div class="case-selector" id="caseSel" role="tablist" aria-label="Demo cases"></div>
+
+      <div class="case-bottom">
+        <div class="case-col case-segs-col">
+          <div class="case-segs" id="caseSegs"></div>
+          <p class="case-status" id="caseStatus"></p>
+        </div>
+        <div class="case-col case-curve-col">
+          <div class="curve-box">
+            <canvas id="caseCurve"></canvas>
+          </div>
+          <div class="curve-legend">
+            <span><i class="sw sw-teal"></i>Ground truth</span>
+            <span><i class="sw sw-coral"></i>Predictions</span>
+            <span><i class="sw sw-gold"></i>Top-5 frames</span>
+          </div>
+        </div>
+        <div class="case-col case-top5-col">
+          <div class="top5" id="caseTop5"></div>
+        </div>
+      </div>
+      <p class="case-tip">How to use: click a <span class="txt-teal">GT</span>, a <span class="txt-coral">predicted moment</span> or a <span class="txt-gold">top-5 saliency frame</span> to play it &mdash; playback stops automatically at the segment end.</p>
+    </div>
+  </section>
+  <!-- End demo -->
+
+  <!-- ============================== TEASER ============================== -->
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <div class="publication-banner">
+          <img src="static/images/overview.png" alt="Overview of the DE²TR framework" loading="lazy">
+        </div>
+        <h2 class="subtitle teaser-caption">
+          <b>Overview of DE&#178;TR.</b> <b>(a)</b> Modal fusion and interaction generate saliency and boundary scores as structural
+          priors; guided by these priors, the <b>DEFormer</b> decouples the probing of semantic and boundary evidence under dual
+          evidence alignment losses. <b>(b)</b> The DEFormer layer: a semantic evidence branch aggregates salient visual context,
+          while a parallel boundary evidence branch captures fine-grained cues and iteratively refines the temporal reference anchors.
+        </h2>
+      </div>
+    </div>
+  </section>
+  <!-- End teaser -->
+
+  <!-- ============================== ABSTRACT ============================== -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Video temporal grounding (VTG) aims to localize relevant moments and predict saliency scores in untrimmed videos
+              based on natural language queries. Recently, DETR-inspired methods have achieved instance-level moment predictions
+              through query-based semantic evidence aggregation. However, unlike spatial objects with clear physical edges, video
+              moments often exhibit ambiguous temporal boundaries due to the semantic gradient. Consequently, relying solely on
+              global semantics can lead to severe boundary misalignment, yielding sub-optimal grounding results.
+            </p>
+            <p>
+              To address this issue, we propose a novel <b>D</b>ual <b>E</b>vidence <b>De</b>tection <b>Tr</b>ansformer
+              (<b>DE&#178;TR</b>) framework for better boundary localization. In particular, we introduce a dual-branch decoder that
+              simultaneously captures global semantic evidence and fine-grained boundary cues. To prevent feature conflict between
+              these distinct objectives, we channel-wise decouple the moment queries, facilitating independent evidence learning under
+              the supervision of evidence alignment losses. Building upon this dual-branch design, we introduce a prior-guided
+              refinement mechanism that employs explicit prior maps to steer queries toward potential regions of interest. Furthermore,
+              a boundary augmentation strategy synthesizes ideal boundary patterns via simple temporal splicing, effectively enhancing
+              the model&rsquo;s boundary awareness. Extensive experiments on multiple popular benchmarks demonstrate that DE&#178;TR
+              significantly outperforms state-of-the-art approaches.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End abstract -->
+
+  <!-- ============================== MOTIVATION ============================== -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Moments Are Not Objects</h2>
+      <div class="content has-text-justified">
+        <p>
+          Objects in images have <b>clear physical edges</b> &mdash; detectors can localize them from appearance alone. Video moments,
+          in contrast, exhibit a <b>semantic gradient</b>: the relevant content fades in and out gradually, so global semantics alone
+          cannot tell where a moment starts or ends. DETR-style grounding aggregates only global semantic evidence, causing severe
+          <b>boundary misalignment</b>. We verify this with a diagnostic experiment: splicing the ground-truth moments into irrelevant
+          background clips creates synthetic videos with hard boundaries &mdash; once the boundary signal is clear, <b>+21.2 mAP</b> is
+          recovered for TR-DETR (QD-DETR: +19.6). Yet models trained on synthetic data remain at baseline level on real videos:
+          more data does not help, the boundary <i>signal</i> does.
+        </p>
+      </div>
+      <div class="columns is-vcentered">
+        <div class="column is-7">
+          <img src="static/images/fig1a.jpg" alt="Objects in images have clear physical edges" loading="lazy">
+          <p class="has-text-centered fig-caption">(a) Objects in image &mdash; clear physical edges &#10003;</p>
+          <img src="static/images/fig1b.jpg" alt="Moments in video exhibit semantic gradient" loading="lazy">
+          <p class="has-text-centered fig-caption">(b) Real moment in video &mdash; semantic gradient, ambiguous boundaries &#10007;</p>
+          <img src="static/images/fig1c.jpg" alt="Synthetic videos provide clear boundary priors" loading="lazy">
+          <p class="has-text-centered fig-caption">(c) Synthetic video &mdash; GT spliced into irrelevant clips, hard boundaries</p>
+        </div>
+        <div class="column is-5">
+          <img src="static/images/diagnostic.png" alt="Diagnostic experiment results" loading="lazy">
+          <p class="has-text-centered fig-caption">(d) Diagnostic experiments with QD-DETR and TR-DETR: clear boundary priors unlock the
+            performance, while synthetic-trained models stay at baseline level on real data.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== EXPERIMENTS AND RESULTS ============================== -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Experiments and Results</h2>
+
+      <div class="table-wrapper">
+        <h3 class="table-title">QVHighlights &mdash; Moment Retrieval &amp; Highlight Detection (%)</h3>
+        <p class="table-note">SlowFast + CLIP backbones. <b>Bold</b>: best &middot; <u>underline</u>: second &middot; &dagger;: audio modality &middot; &Dagger;: data augmentation.</p>
+        <div class="table-scroll">
+        <table class="table is-narrow result-table">
+          <colgroup><col style="width:158px"><col span="14" style="width:55px"></colgroup>
+          <thead>
+            <tr><th rowspan="4" class="th-method">Method</th>
+              <th colspan="7" class="cmid">test</th><th colspan="7" class="cmid">val</th></tr>
+            <tr><th colspan="5" class="cmid">MR</th><th colspan="2" class="cmid">HD</th><th colspan="5" class="cmid">MR</th><th colspan="2" class="cmid">HD</th></tr>
+            <tr><th colspan="2" class="cmid">R1</th><th colspan="3" class="cmid">mAP</th><th colspan="2" class="cmid">&ge; Very Good</th><th colspan="2" class="cmid">R1</th><th colspan="3" class="cmid">mAP</th><th colspan="2" class="cmid">&ge; Very Good</th></tr>
+            <tr><th>@0.5</th><th>@0.7</th><th>@0.5</th><th>@0.75</th><th>Avg.</th><th>mAP</th><th>HIT@1</th>
+                <th>@0.5</th><th>@0.7</th><th>@0.5</th><th>@0.75</th><th>Avg.</th><th>mAP</th><th>HIT@1</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>M-DETR <span class="method-venue">NeurIPS'21</span></td><td>52.89</td><td>33.02</td><td>54.82</td><td>29.40</td><td>30.73</td><td>35.69</td><td>55.60</td><td>53.94</td><td>34.84</td><td>&ndash;</td><td>&ndash;</td><td>32.20</td><td>35.65</td><td>55.55</td></tr>
+            <tr><td>UMT&dagger; <span class="method-venue">CVPR'22</span></td><td>56.23</td><td>41.18</td><td>53.83</td><td>37.01</td><td>36.12</td><td>38.18</td><td>59.99</td><td>60.26</td><td>44.26</td><td>56.70</td><td>39.90</td><td>38.59</td><td>39.85</td><td>64.19</td></tr>
+            <tr><td>QD-DETR <span class="method-venue">CVPR'23</span></td><td>62.40</td><td>44.98</td><td>62.52</td><td>39.88</td><td>39.86</td><td>38.94</td><td>62.40</td><td>62.68</td><td>46.66</td><td>62.23</td><td>41.82</td><td>41.22</td><td>39.13</td><td>63.03</td></tr>
+            <tr><td>MomentDiff <span class="method-venue">NeurIPS'23</span></td><td>57.42</td><td>39.66</td><td>54.02</td><td>35.73</td><td>35.95</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>UniVTG <span class="method-venue">ICCV'23</span></td><td>58.86</td><td>40.86</td><td>57.60</td><td>35.59</td><td>35.47</td><td>38.20</td><td>60.96</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>36.13</td><td>38.83</td><td>&ndash;</td></tr>
+            <tr><td>CG-DETR <span class="method-venue">arXiv'23</span></td><td>65.40</td><td>48.40</td><td>64.50</td><td>42.80</td><td>42.90</td><td>40.30</td><td>66.20</td><td>67.40</td><td>52.10</td><td>65.60</td><td>45.70</td><td>44.90</td><td>40.80</td><td><u>66.70</u></td></tr>
+            <tr><td>TR-DETR <span class="method-venue">AAAI'24</span></td><td>64.66</td><td>48.96</td><td>63.98</td><td>43.73</td><td>42.62</td><td>39.91</td><td>63.42</td><td>67.10</td><td>51.48</td><td>66.27</td><td>46.42</td><td>45.09</td><td>40.55</td><td>64.77</td></tr>
+            <tr><td>UVCOM <span class="method-venue">CVPR'24</span></td><td>63.55</td><td>47.47</td><td>63.37</td><td>42.67</td><td>43.18</td><td>39.74</td><td>64.20</td><td>65.10</td><td>51.81</td><td>&ndash;</td><td>&ndash;</td><td>45.79</td><td>40.03</td><td>63.29</td></tr>
+            <tr><td>BAM-DETR <span class="method-venue">ECCV'24</span></td><td>62.71</td><td>48.64</td><td>64.57</td><td>46.33</td><td>45.36</td><td>&ndash;</td><td>&ndash;</td><td>65.10</td><td>51.61</td><td>65.41</td><td>48.56</td><td>47.61</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>TD-DETR&Dagger; <span class="method-venue">ICCV'25</span></td><td>64.53</td><td>50.37</td><td>66.21</td><td>47.32</td><td>46.69</td><td>&ndash;</td><td>&ndash;</td><td>65.88</td><td>53.67</td><td>66.43</td><td>49.86</td><td>49.05</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>KDA <span class="method-venue">ICCV'25</span></td><td>66.70</td><td>50.88</td><td>67.57</td><td>46.31</td><td>45.67</td><td>&ndash;</td><td>&ndash;</td><td><u>69.11</u></td><td>53.46</td><td>68.17</td><td>48.04</td><td>47.41</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>MS-DETR <span class="method-venue">ACMMM'25</span></td><td>64.72</td><td>48.77</td><td>66.41</td><td>44.91</td><td>44.89</td><td>40.45</td><td>65.95</td><td>66.90</td><td>51.68</td><td>67.19</td><td>46.05</td><td>46.00</td><td>40.57</td><td>66.58</td></tr>
+            <tr class="ours"><td>DE<sup>2</sup>TR</td><td><u>67.24</u></td><td><u>51.39</u></td><td><u>67.92</u></td><td><u>49.83</u></td><td><u>48.74</u></td><td><b>41.08</b></td><td><u>66.34</u></td><td>68.13</td><td><u>53.81</u></td><td><u>68.89</u></td><td><u>51.61</u></td><td><u>50.67</u></td><td><u>40.93</u></td><td>66.65</td></tr>
+            <tr class="ours ours-best"><td>DE<sup>2</sup>TR&Dagger;</td><td><b>67.98</b></td><td><b>52.46</b></td><td><b>68.36</b></td><td><b>51.24</b></td><td><b>49.87</b></td><td><u>40.51</u></td><td><b>66.75</b></td><td><b>69.81</b></td><td><b>55.29</b></td><td><b>70.52</b></td><td><b>53.43</b></td><td><b>52.12</b></td><td><b>41.20</b></td><td><b>66.97</b></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="table-foot">vs. previous best (TD-DETR): <b>+2.05 Avg mAP</b> on test; with BAS, gains widen to <b>+3.18 Avg mAP</b>, <b>+2.09 R1@0.7</b> and <b>+3.92 mAP@0.75</b>.</p>
+      </div>
+
+      <div class="table-wrapper">
+        <h3 class="table-title">Charades-STA &amp; TACoS &mdash; Moment Retrieval (%)</h3>
+        <div class="table-scroll">
+        <table class="table is-narrow result-table">
+          <colgroup><col style="width:156px"><col span="8" style="width:58px"></colgroup>
+          <thead>
+            <tr><th rowspan="2" class="th-method">Method</th>
+              <th colspan="4" class="cmid">Charades-STA</th><th colspan="4" class="cmid">TACoS</th></tr>
+            <tr><th>R1@0.3</th><th>R1@0.5</th><th>R1@0.7</th><th>mIoU</th>
+                <th>R1@0.3</th><th>R1@0.5</th><th>R1@0.7</th><th>mIoU</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>M-DETR <span class="method-venue">NeurIPS'21</span></td><td>65.83</td><td>52.07</td><td>30.59</td><td>45.54</td><td>37.97</td><td>24.67</td><td>11.97</td><td>25.49</td></tr>
+            <tr><td>QD-DETR <span class="method-venue">CVPR'23</span></td><td>&ndash;</td><td>57.31</td><td>32.55</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>MomentDiff <span class="method-venue">NeurIPS'23</span></td><td>&ndash;</td><td>55.57</td><td>32.42</td><td>&ndash;</td><td>44.78</td><td>33.68</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>UniVTG <span class="method-venue">ICCV'23</span></td><td>70.81</td><td>58.01</td><td>35.65</td><td>50.10</td><td>51.44</td><td>34.97</td><td>17.35</td><td>33.60</td></tr>
+            <tr><td>UVCOM <span class="method-venue">CVPR'24</span></td><td>&ndash;</td><td>59.25</td><td>36.64</td><td>&ndash;</td><td>&ndash;</td><td>36.39</td><td>23.32</td><td>&ndash;</td></tr>
+            <tr><td>LLMEPET <span class="method-venue">ACMMM'24</span></td><td>70.91</td><td>&ndash;</td><td>36.49</td><td>50.25</td><td>52.73</td><td>&ndash;</td><td>22.78</td><td>36.55</td></tr>
+            <tr><td>DualGround <span class="method-venue">NeurIPS'25</span></td><td>&ndash;</td><td><b>61.11</b></td><td><u>38.52</u></td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>MS-DETR <span class="method-venue">ACMMM'25</span></td><td><u>71.34</u></td><td>59.62</td><td>36.48</td><td><u>50.59</u></td><td>53.16</td><td>39.65</td><td>23.42</td><td>37.01</td></tr>
+            <tr><td>FlashVTG <span class="method-venue">WACV'25</span></td><td>&ndash;</td><td>60.11</td><td>38.01</td><td>&ndash;</td><td><u>53.71</u></td><td><u>41.76</u></td><td><u>24.74</u></td><td><u>37.61</u></td></tr>
+            <tr><td>KDA <span class="method-venue">ICCV'25</span></td><td>&ndash;</td><td>60.23</td><td>37.63</td><td>&ndash;</td><td>&ndash;</td><td>40.13</td><td>24.34</td><td>&ndash;</td></tr>
+            <tr class="ours ours-best"><td>DE<sup>2</sup>TR</td><td><b>72.31</b></td><td><u>60.39</u></td><td><b>39.87</b></td><td><b>51.58</b></td><td><b>56.29</b></td><td><b>42.52</b></td><td><b>27.14</b></td><td><b>39.76</b></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="table-foot">At strict IoU thresholds: <b>+1.35 R1@0.7</b> on Charades-STA and <b>+2.40 R1@0.7</b> on TACoS.</p>
+      </div>
+
+      <div class="table-wrapper">
+        <h3 class="table-title">TVSum &mdash; Highlight Detection Generalization (Top-5 mAP, %)</h3>
+        <div class="table-scroll">
+        <table class="table is-narrow result-table">
+          <colgroup><col style="width:156px"><col span="11" style="width:44px"></colgroup>
+          <thead><tr><th class="th-method">Method</th><th>VT</th><th>VU</th><th>GA</th><th>MS</th><th>PK</th><th>PR</th><th>FM</th><th>BK</th><th>BT</th><th>DS</th><th>Avg.</th></tr></thead>
+          <tbody>
+            <tr><td>TCG <span class="method-venue">ICCV'21</span></td><td>85.0</td><td>71.4</td><td>81.9</td><td>78.6</td><td>80.2</td><td>75.5</td><td>71.6</td><td>77.3</td><td>78.6</td><td>68.1</td><td>76.8</td></tr>
+            <tr><td>UMT <span class="method-venue">CVPR'22</span></td><td>87.5</td><td>81.5</td><td>88.2</td><td>78.8</td><td>81.4</td><td>87.0</td><td>76.0</td><td>86.9</td><td>84.4</td><td>79.6</td><td>83.1</td></tr>
+            <tr><td>QD-DETR <span class="method-venue">CVPR'23</span></td><td>88.2</td><td>87.4</td><td>85.6</td><td>85.0</td><td>85.8</td><td>86.9</td><td>76.4</td><td>91.3</td><td>89.2</td><td>73.7</td><td>85.0</td></tr>
+            <tr><td>UniVTG <span class="method-venue">ICCV'23</span></td><td>83.9</td><td>85.1</td><td>89.0</td><td>80.1</td><td>84.6</td><td>81.4</td><td>70.9</td><td>91.7</td><td>73.5</td><td>69.3</td><td>81.0</td></tr>
+            <tr><td>TR-DETR <span class="method-venue">AAAI'24</span></td><td>89.3</td><td>93.0</td><td>94.3</td><td>85.1</td><td>88.0</td><td>88.6</td><td>80.4</td><td>91.3</td><td>89.5</td><td><u>81.6</u></td><td>88.1</td></tr>
+            <tr><td>UVCOM <span class="method-venue">CVPR'24</span></td><td>87.6</td><td>91.6</td><td>91.4</td><td>86.7</td><td>86.9</td><td>86.9</td><td>76.9</td><td>92.3</td><td>87.4</td><td>75.6</td><td>86.3</td></tr>
+            <tr><td>R2-Tuning <span class="method-venue">ECCV'24</span></td><td>85.0</td><td>85.9</td><td>91.0</td><td>81.7</td><td><u>88.8</u></td><td>87.4</td><td>78.1</td><td>89.2</td><td>90.3</td><td>74.7</td><td>85.2</td></tr>
+            <tr><td>MS-DETR <span class="method-venue">ACMMM'25</span></td><td><u>89.8</u></td><td><u>93.3</u></td><td><u>94.8</u></td><td><u>88.7</u></td><td>88.5</td><td>89.0</td><td><u>80.5</u></td><td><u>94.0</u></td><td>88.7</td><td>76.9</td><td><u>88.4</u></td></tr>
+            <tr><td>MQVTG <span class="method-venue">ICCV'25</span></td><td>87.7</td><td>91.6</td><td>92.3</td><td>85.2</td><td>85.7</td><td><b>91.3</b></td><td>78.5</td><td><b>96.5</b></td><td><u>90.6</u></td><td><b>82.9</b></td><td>88.2</td></tr>
+            <tr class="ours ours-best"><td>DE<sup>2</sup>TR</td><td><b>91.7</b></td><td><b>94.1</b></td><td><b>95.4</b></td><td><b>88.9</b></td><td><b>89.5</b></td><td><u>90.4</u></td><td><b>81.2</b></td><td>92.3</td><td><b>91.6</b></td><td>80.9</td><td><b>89.6</b></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="table-foot">Best on <b>7 / 10</b> categories &middot; <b>+1.20 Avg</b> over the previous best.</p>
+      </div>
+
+      <!-- ablation -->
+      <div class="columns is-centered">
+        <div class="column is-6">
+          <div class="table-wrapper">
+            <h3 class="table-title">Effect of Each Component</h3>
+            <div class="table-scroll">
+            <table class="table is-narrow result-table ablation-table">
+              <colgroup><col span="6" style="width:32px"><col span="2" style="width:46px"><col style="width:58px"></colgroup>
+              <thead>
+                <tr><th rowspan="2"><i>DEF</i></th><th rowspan="2">&#8466;<sub>bea</sub></th><th rowspan="2">&#8466;<sub>sea</sub></th><th rowspan="2">P<sub>s</sub></th><th rowspan="2">P<sub>b</sub></th><th rowspan="2"><i>BAS</i></th><th colspan="2" class="cmid">R1</th><th class="cmid">mAP</th></tr>
+                <tr><th>@0.5</th><th>@0.7</th><th>Avg.</th></tr>
+              </thead>
+              <tbody>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td>65.68</td><td>49.87</td><td>45.63</td></tr>
+                <tr><td>&#10003;</td><td></td><td></td><td></td><td></td><td></td><td>65.23</td><td>50.52</td><td>46.30</td></tr>
+                <tr><td>&#10003;</td><td>&#10003;</td><td></td><td></td><td></td><td></td><td>66.71</td><td>50.97</td><td>48.08</td></tr>
+                <tr><td>&#10003;</td><td></td><td>&#10003;</td><td></td><td></td><td></td><td>67.03</td><td>49.35</td><td>47.69</td></tr>
+                <tr><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td></td><td></td><td></td><td>66.84</td><td>52.13</td><td>49.24</td></tr>
+                <tr><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td></td><td></td><td>67.42</td><td>52.39</td><td>49.74</td></tr>
+                <tr><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td></td><td>&#10003;</td><td></td><td>66.77</td><td>52.71</td><td>49.69</td></tr>
+                <tr class="ours"><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td></td><td>68.13</td><td>53.81</td><td>50.67</td></tr>
+                <tr class="ours ours-best"><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td><b>69.81</b></td><td><b>55.29</b></td><td><b>52.12</b></td></tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="table-wrapper">
+            <h3 class="table-title">Component Build-Up &mdash; Avg mAP</h3>
+            <div class="waterfall">
+              <div class="wf-row"><span class="wf-label">Baseline</span><div class="wf-track"><div class="wf-bar wf-gray" style="width:8.8%"></div><span class="wf-val">45.63</span></div></div>
+              <div class="wf-row"><span class="wf-label">+ DEFormer</span><div class="wf-track"><div class="wf-bar wf-teal-a" style="width:18.3%"></div><span class="wf-val">46.30</span><span class="wf-delta">+0.67</span></div></div>
+              <div class="wf-row"><span class="wf-label">+ &#8466;<sub>sea</sub>, &#8466;<sub>bea</sub></span><div class="wf-track"><div class="wf-bar wf-teal-b" style="width:59.6%"></div><span class="wf-val">49.24</span><span class="wf-delta">+2.94</span></div></div>
+              <div class="wf-row"><span class="wf-label">+ priors P<sub>s</sub>, P<sub>b</sub></span><div class="wf-track"><div class="wf-bar wf-teal-c" style="width:79.6%"></div><span class="wf-val">50.67</span><span class="wf-delta">+1.43</span></div></div>
+              <div class="wf-row"><span class="wf-label">+ BAS = DE<sup>2</sup>TR&Dagger;</span><div class="wf-track"><div class="wf-bar wf-coral" style="width:100%"></div><span class="wf-val">52.12</span><span class="wf-delta">+1.45</span></div></div>
+              <div class="wf-total">total gain <b>+6.49</b> &mdash; every piece helps; losses contribute most, BAS is a free +1.45</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- discussion tables: 2x2 grid -->
+      <div class="columns is-centered is-multiline">
+        <div class="column is-6">
+          <div class="table-wrapper narrow-table">
+            <h3 class="table-title">Backbone Robustness</h3>
+            <table class="table is-narrow result-table">
+              <colgroup><col style="width:132px"><col style="width:68px"><col span="3" style="width:54px"></colgroup>
+              <thead>
+                <tr><th rowspan="2">Method</th><th rowspan="2">Backbone</th><th colspan="2" class="cmid">R1</th><th class="cmid">mAP</th></tr>
+                <tr><th>@0.5</th><th>@0.7</th><th>Avg.</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>TD-DETR <span class="method-venue">ICCV'25</span></td><td>SF+C</td><td>65.88</td><td>53.67</td><td>49.05</td></tr>
+                <tr class="ours"><td>DE<sup>2</sup>TR</td><td>SF+C</td><td><b>68.13</b></td><td><b>53.81</b></td><td><b>50.67</b></td></tr>
+                <tr><td>TD-DETR <span class="method-venue">ICCV'25</span></td><td>IV2</td><td>71.19</td><td>55.81</td><td>51.72</td></tr>
+                <tr class="ours"><td>DE<sup>2</sup>TR</td><td>IV2</td><td><b>71.84</b></td><td><b>57.68</b></td><td><b>53.91</b></td></tr>
+              </tbody>
+            </table>
+            <p class="mini-note">Backbone-agnostic: SOTA with SlowFast+CLIP and InternVideo2 (IV2).</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="table-wrapper narrow-table">
+            <h3 class="table-title">Query Strategy for Heads</h3>
+            <table class="table is-narrow result-table">
+              <colgroup><col style="width:88px"><col span="3" style="width:54px"></colgroup>
+              <thead>
+                <tr><th rowspan="2">Method</th><th colspan="2" class="cmid">R1</th><th class="cmid">mAP</th></tr>
+                <tr><th>@0.5</th><th>@0.7</th><th>Avg.</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Merged</td><td>66.71</td><td>52.90</td><td>49.53</td></tr>
+                <tr class="ours"><td>Separate</td><td><b>68.13</b></td><td><b>53.81</b></td><td><b>50.67</b></td></tr>
+              </tbody>
+            </table>
+            <p class="mini-note">Routing decoupled queries to their own heads keeps task&ndash;feature alignment strict.</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="table-wrapper narrow-table">
+            <h3 class="table-title">Prior Map Injection</h3>
+            <table class="table is-narrow result-table">
+              <colgroup><col span="2" style="width:66px"><col span="3" style="width:54px"></colgroup>
+              <thead>
+                <tr><th>Sem.</th><th>Bnd.</th><th colspan="2" class="cmid">R1</th><th class="cmid">mAP</th></tr>
+                <tr><th>Branch</th><th>Branch</th><th>@0.5</th><th>@0.7</th><th>Avg.</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>memory</td><td>memory</td><td>67.74</td><td>52.97</td><td>50.14</td></tr>
+                <tr><td>query</td><td>query</td><td>68.97</td><td>53.34</td><td>50.32</td></tr>
+                <tr><td>memory</td><td>query</td><td>67.51</td><td>52.05</td><td>49.86</td></tr>
+                <tr class="ours"><td>query</td><td>memory</td><td>68.13</td><td><b>53.81</b></td><td><b>50.67</b></td></tr>
+              </tbody>
+            </table>
+            <p class="mini-note">Semantic &rarr; query (global intent) &middot; boundary &rarr; memory (local cues) works best.</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="table-wrapper narrow-table">
+            <h3 class="table-title">Number of Queries N</h3>
+            <table class="table is-narrow result-table">
+              <colgroup><col style="width:40px"><col span="3" style="width:54px"></colgroup>
+              <thead>
+                <tr><th rowspan="2">N</th><th colspan="2" class="cmid">R1</th><th class="cmid">mAP</th></tr>
+                <tr><th>@0.5</th><th>@0.7</th><th>Avg.</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>5</td><td>67.68</td><td>53.48</td><td>48.56</td></tr>
+                <tr class="ours"><td>10</td><td>68.13</td><td>53.81</td><td>50.67</td></tr>
+                <tr><td>15</td><td>68.52</td><td>53.35</td><td><b>51.22</b></td></tr>
+                <tr><td>20</td><td><b>69.35</b></td><td><b>54.00</b></td><td>51.19</td></tr>
+              </tbody>
+            </table>
+            <p class="mini-note">Performance saturates as N grows; N = 10 kept for fair comparison.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- supplementary: high-ambiguity splits -->
+      <div class="table-wrapper">
+        <h3 class="table-title">Robustness on High-Ambiguity Splits</h3>
+        <p class="table-note">Subsets of QVHighlights <i>val</i> filtered by the ambiguity coefficient &delta;<sub>k</sub> &mdash; top 20% (Extreme), 50% (Hard), 80% (Moderate) most ambiguous samples. Competitors reproduced from official codes.</p>
+        <div class="table-scroll">
+        <table class="table is-narrow result-table">
+          <colgroup><col style="width:156px"><col span="12" style="width:48px"></colgroup>
+          <thead>
+            <tr><th rowspan="2" class="th-method">Method</th>
+              <th colspan="3" class="cmid-full">Extreme (20%)</th><th colspan="3" class="cmid-full">Hard (50%)</th><th colspan="3" class="cmid-full">Moderate (80%)</th><th colspan="3" class="cmid-full">All (100%)</th></tr>
+            <tr><th>R1@0.5</th><th>R1@0.7</th><th>mAP</th><th>R1@0.5</th><th>R1@0.7</th><th>mAP</th><th>R1@0.5</th><th>R1@0.7</th><th>mAP</th><th>R1@0.5</th><th>R1@0.7</th><th>mAP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>QD-DETR <span class="method-venue">CVPR'23</span></td><td>56.13</td><td>39.03</td><td>34.80</td><td>58.71</td><td>40.52</td><td>35.48</td><td>62.74</td><td>45.08</td><td>39.52</td><td>63.87</td><td>47.74</td><td>42.45</td></tr>
+            <tr><td>TR-DETR <span class="method-venue">AAAI'24</span></td><td>51.29</td><td>33.55</td><td>32.24</td><td>56.57</td><td>40.77</td><td>35.82</td><td>62.90</td><td>47.50</td><td>40.90</td><td>65.16</td><td>50.39</td><td>44.38</td></tr>
+            <tr><td>BAM-DETR <span class="method-venue">ECCV'24</span></td><td>51.94</td><td>38.71</td><td>38.10</td><td>56.90</td><td>42.19</td><td>39.98</td><td>62.58</td><td>47.90</td><td>44.83</td><td>63.68</td><td>51.37</td><td>47.84</td></tr>
+            <tr><td>TD-DETR <span class="method-venue">ICCV'25</span></td><td>54.52</td><td>40.65</td><td>38.82</td><td>58.19</td><td>43.61</td><td>39.94</td><td>63.71</td><td>49.03</td><td>44.92</td><td>65.74</td><td>52.97</td><td>48.83</td></tr>
+            <tr class="ours"><td>Ours</td><td>60.00</td><td>41.32</td><td>40.40</td><td>62.06</td><td>45.68</td><td>42.64</td><td>67.26</td><td>51.69</td><td>48.09</td><td>68.13</td><td>53.81</td><td>50.67</td></tr>
+            <tr class="ours ours-best"><td>Ours w/ BAS</td><td><b>61.61</b></td><td><b>42.13</b></td><td><b>41.25</b></td><td><b>63.48</b></td><td><b>47.26</b></td><td><b>43.79</b></td><td><b>68.31</b></td><td><b>52.74</b></td><td><b>49.02</b></td><td><b>69.81</b></td><td><b>55.29</b></td><td><b>52.12</b></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="table-foot">SOTA on every ambiguity level &mdash; DE<sup>2</sup>TR mitigates inherent boundary ambiguity rather than overfitting to sharp transitions.</p>
+      </div>
+    </div>
+  </section>
+  <!-- End experiments -->
+
+  <!-- ============================== QUALITATIVE RESULTS ============================== -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Qualitative Results</h2>
+      <div class="content has-text-justified">
+        <p>
+          The semantic query <span class="txt-teal">C<sub>s</sub></span> attends to the whole moment, while the boundary
+          queries <span class="txt-coral">C<sub>b,s</sub>, C<sub>b,e</sub></span> spike exactly at the edges. Compared with
+          recent advanced methods, DE&#178;TR keeps semantic alignment while localizing sharp, well-aligned boundaries.
+          More qualitative results on the QVHighlights <i>val</i> split are included from the supplementary material.
+        </p>
+      </div>
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item">
+          <img src="static/images/qualitative_duo.png" alt="Attention maps (a) and qualitative comparison (b)" loading="lazy">
+          <h2 class="subtitle has-text-centered">
+            (a) Attention maps: the semantic query C<sub>s</sub> covers the whole moment, while boundary queries
+            C<sub>b,s</sub>, C<sub>b,e</sub> spike exactly at the edges &mdash; diverse regions for different queries.
+            (b) Qualitative comparison: TD-DETR drifts at ambiguous boundaries; DE&#178;TR keeps semantic alignment
+            while localizing sharp, well-aligned boundaries (88.2% vs 30.6% IoU in this example).
+          </h2>
+        </div>
+        <div class="item">
+          <img src="static/images/qr1.png" alt="Additional qualitative results on the QVHighlights val split (I)" loading="lazy">
+          <h2 class="subtitle has-text-centered">
+            Additional qualitative results on the QVHighlights <i>val</i> split (I).
+          </h2>
+        </div>
+        <div class="item">
+          <img src="static/images/qr2.png" alt="Additional qualitative results on the QVHighlights val split (II)" loading="lazy">
+          <h2 class="subtitle has-text-centered">
+            Additional qualitative results on the QVHighlights <i>val</i> split (II).
+          </h2>
+        </div>
+      </div>
+      <p class="fig-caption has-text-centered" style="margin-top:0.5rem">
+        <i class="fas fa-search-plus"></i>&nbsp; Click any image to view it full-size.
+      </p>
+    </div>
+  </section>
+  <!-- End qualitative -->
+
+  <!-- ============================== POSTER ============================== -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Poster</h2>
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <a href="static/pdf/140x100%20ECCV%20Poster%20Template%20-%20download%20a%20copy%20to%20make%20edits%20for%20your%20personal%20poster.pdf" download="140x100 ECCV Poster Template - download a copy to make edits for your personal poster.pdf">
+            <img src="static/pdf/poster_template_preview.png" alt="140x100 ECCV Poster Template" loading="lazy" style="border-radius: 12px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);">
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End poster -->
+
+  <!-- ============================== BIBTEX ============================== -->
+  <section class="section hero is-light" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>@inproceedings{zhang2026de2tr,
+  title     = {{DE$^2$TR}: Dual Evidence Detection Transformer for Video Temporal Grounding},
+  author    = {Zhang, Yifan and Liu, Chengxu and Dun, Yujie and Qian, Xueming},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  year      = {2026}
+}</code></pre>
+    </div>
+  </section>
+  <!-- End bibtex -->
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>
+              which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+              You are free to borrow the source code of this website, we just ask that you link back to this page in the footer.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
